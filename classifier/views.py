@@ -3,7 +3,7 @@ from django.contrib import messages
 from .forms import ImageUploadForm
 from .models import Image
 import zipfile36 as zipfile
-import base64
+from PIL import Image as pillow_image
 
 # Create your views here.
 
@@ -26,13 +26,27 @@ def upload(request):
 def home(request):
     images = {}
     required_zip = Image.objects.last()
+    # required_zip.zipped_images.extractall()
     print(required_zip)
     zf = zipfile.ZipFile(required_zip.zipped_images)
-    print(zf.namelist())
-    with zipfile.ZipFile(required_zip.zipped_images, 'r') as z:
-        for f in z.namelist():
-            images.update({f: base64.b64encode(z.read(f)), })
+    foldername = zf.filename[:-4]
+    zf.extractall(path="media/" + foldername)
+    filenames = zf.namelist()
+    print(zf.filename)
+    path = "media/" + foldername + "/"
+    for filename in filenames:
+        final_path = path + filename
+        img = pillow_image.open(final_path)
+        print(img.height, img.width)
+        output_size = (350, 350)
+        img = img.resize(output_size)
+        print(img.height, img.width)
+        img.save(final_path)
+    # with zipfile.ZipFile(required_zip.zipped_images, 'r') as z:
+    #     for f in z.namelist():
+    #         images.update({f: base64.b64encode(z.read(f)), })
     context = {
-        "images": images,
+        "foldername": foldername,
+        "filenames": filenames
     }
     return render(request, 'classifier/home.html', context)

@@ -23,7 +23,7 @@ from classifier import views as classifier_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('upload/', classifier_views.upload, name='upload'),
-    path('home/', classifier_views.home, name='home')
+    path('', classifier_views.home, name='home')
 ]
 
 if settings.DEBUG:
