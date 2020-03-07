@@ -4,6 +4,7 @@ from .forms import ImageUploadForm
 from .models import Image
 import zipfile36 as zipfile
 from PIL import Image as pillow_image
+import math
 
 # Create your views here.
 
@@ -24,15 +25,16 @@ def upload(request):
 
 
 def home(request):
-    images = {}
     required_zip = Image.objects.last()
     # required_zip.zipped_images.extractall()
+    final_filenames = []
     print(required_zip)
     zf = zipfile.ZipFile(required_zip.zipped_images)
     foldername = zf.filename[:-4]
     zf.extractall(path="media/" + foldername)
     filenames = zf.namelist()
-    print(zf.filename)
+    print(filenames)
+    length = math.ceil(len(filenames) / 4)
     path = "media/" + foldername + "/"
     for filename in filenames:
         final_path = path + filename
@@ -42,11 +44,17 @@ def home(request):
         img = img.resize(output_size)
         print(img.height, img.width)
         img.save(final_path)
-    # with zipfile.ZipFile(required_zip.zipped_images, 'r') as z:
-    #     for f in z.namelist():
-    #         images.update({f: base64.b64encode(z.read(f)), })
+
+    for i in range(0, len(filenames), 4):
+        temp = []
+        j = i
+        for j in range(i, i + 4):
+            if j < len(filenames):
+                temp.append(filenames[j])
+        final_filenames.append(temp)
     context = {
         "foldername": foldername,
-        "filenames": filenames
+        "final_filenames": final_filenames,
     }
+    print(final_filenames)
     return render(request, 'classifier/home.html', context)
